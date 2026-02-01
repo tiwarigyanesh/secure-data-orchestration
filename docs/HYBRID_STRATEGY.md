@@ -4,11 +4,13 @@
 
 This document outlines the strategy for decoupling the Storage and Compute layers in our Secure Data Orchestration platform, enabling Member Organizations to run workloads on their own infrastructure while maintaining centralized orchestration.
 
+---
 
 ## The Hybrid Constraint
 
 **Requirement**: If an Organization requires data to remain on their own local S3-compatible storage and run processing on their own local server, the architecture must handle this without a total rewrite of the Backbone logic.
 
+---
 
 ## Decoupling Strategy: Interface Abstraction
 
@@ -16,8 +18,9 @@ The core principle is **programming to interfaces, not implementations**. Our ar
 
 ### Three Key Abstractions
 
-![Three Key Abstractions](/Abstractions.png)
+![Three Key Abstractions](/docs/Abstractions.png)
 
+---
 
 ## Implementation Approach
 
@@ -26,6 +29,7 @@ The core principle is **programming to interfaces, not implementations**. Our ar
 **Current**: AWS S3 with native SDK  
 **Hybrid**: S3-compatible API (works with MinIO, Ceph, etc.)
 
+```python
 # Configuration-driven storage endpoint
 STORAGE_ENDPOINT = os.environ.get("STORAGE_ENDPOINT")  # None for AWS, URL for on-prem
 
@@ -34,7 +38,7 @@ s3_client = boto3.client(
     endpoint_url=STORAGE_ENDPOINT,  # MinIO: "http://minio.local:9000"
     # Credentials from environment or IAM
 )
-
+```
 **No code changes required** — the boto3 SDK already supports S3-compatible endpoints via the `endpoint_url` parameter.
 
 ### 2. Event Abstraction
@@ -54,13 +58,16 @@ For on-premises storage, deploy a lightweight **Relay Agent** that:
 
 COMPUTE_MODE = os.environ.get("COMPUTE_MODE", "ECS")  # "ECS" | "LOCAL_DOCKER"
 
+```python
 if COMPUTE_MODE == "ECS":
     # Trigger ECS task (current implementation)
     ecs_client.run_task(...)
 elif COMPUTE_MODE == "LOCAL_DOCKER":
     # Send task to on-prem Docker host via secure API
     requests.post(f"{DOCKER_API_ENDPOINT}/tasks", json=task_payload)
+```
 
+---
 
 ## Configuration Matrix
 
@@ -70,6 +77,7 @@ elif COMPUTE_MODE == "LOCAL_DOCKER":
 | **Hybrid Compute** | AWS S3 | S3 Notifications | Docker (on-prem) |
 | **Full On-Prem** | MinIO (on-prem) | Relay Agent → Webhook | Docker (on-prem) |
 
+---
 
 ## What Stays in the Cloud
 
@@ -82,6 +90,7 @@ Regardless of deployment mode, these components remain centralized:
 
 This ensures consistent governance, auditability, and security policies across all Member Organizations.
 
+---
 
 ## Migration Path
 
@@ -91,6 +100,7 @@ This ensures consistent governance, auditability, and security policies across a
 4. **Phase 4**: Add compute abstraction layer
 5. **Phase 5**: Per-organization configuration in metadata store
 
+---
 
 ## Key Design Decisions
 
@@ -101,6 +111,7 @@ This ensures consistent governance, auditability, and security policies across a
 | Environment-based config | No code changes for different deployment modes |
 | Centralized audit | Compliance and governance requirements |
 
+---
 
 ## Conclusion
 

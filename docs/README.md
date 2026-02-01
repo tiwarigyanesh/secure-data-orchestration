@@ -4,12 +4,12 @@ A multi-tenant platform prototype for secure data package processing with full a
 
 ## Architecture Overview
 
-![Architecture Overview](/Architecture_Overview.png)
+![Architecture Overview](/docs/Architecture_Overview.png)
 
 
 ## Project Structure
 
-
+```
 secure-data-orchestration/
 ├── infra/                    # Terraform Infrastructure as Code
 │   ├── main.tf               # Main configuration & providers
@@ -30,7 +30,7 @@ secure-data-orchestration/
 └── docs/
     ├── README.md             # This file
     └── HYBRID_STRATEGY.md    # Hybrid architecture strategy
-
+```
 
 ## Prerequisites
 
@@ -43,22 +43,29 @@ secure-data-orchestration/
 ## Deployment Guide
 
 ### Step 1: Initialize Terraform
+
+```bash
 cd infra
 terraform init
+```
 
 ### Step 2: Review the Deployment Plan
+```bash
 terraform plan -var="environment=dev"
-
+```
 ### Step 3: Deploy Infrastructure
+```bash
 terraform apply -var="environment=dev"
-
+```
    Save the outputs for the next steps:
 
+```bash
    terraform output -json > ../outputs.json
-
+```
 ### Step 4: Build and Push the Container Image
 
 # Get ECR repository URL from Terraform output
+```bash
 ECR_URL=$(terraform output -raw ecr_repository_url)
 AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo "us-east-1")
 
@@ -71,14 +78,15 @@ cd ../src/container
 docker build -t processor:latest .
 docker tag processor:latest $ECR_URL:latest
 docker push $ECR_URL:latest
+```
 
 ### Step 5: Update Lambda (if code changes)
 
 After any Lambda code changes:
-
+```bash
 cd infra
 terraform apply -var="environment=dev"
-
+```
 ## Security Features
 
 ### Encryption at Rest
@@ -122,13 +130,13 @@ Update `terraform.tfvars`:
 allowed_organization_ids = ["org-001", "org-002", "org-003", "org-new"]
 
 Then apply:
-
+```bash
 terraform apply
-
+```
 ## Cleanup
 
 To destroy all resources:
-
+```bash
 cd infra
 
 # Empty the S3 bucket first
@@ -137,3 +145,4 @@ aws s3 rm s3://$BUCKET_NAME --recursive
 
 # Destroy infrastructure
 terraform destroy -var="environment=dev"
+```
