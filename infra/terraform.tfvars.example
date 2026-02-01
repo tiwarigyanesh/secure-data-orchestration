@@ -1,0 +1,23 @@
+# =============================================================================
+# Example Terraform Variables
+# =============================================================================
+# Copy this file to terraform.tfvars and customize for your environment
+# =============================================================================
+
+aws_region  = "eu-north-1"
+environment = "dev"
+
+# Add your organization IDs here
+allowed_organization_ids = [
+  "org-001",
+  "org-002",
+  "org-003"
+]
+
+# Lambda configuration
+lambda_memory_size = 256
+lambda_timeout     = 60
+
+# ECS configuration
+container_cpu    = 256
+container_memory = 512
